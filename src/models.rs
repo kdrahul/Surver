@@ -16,22 +16,23 @@ pub struct ERSUsers {
 pub struct Event {
     pub id: i32,
     pub name: String,
-    pub description: String,
-    pub organizer: String,
-    pub venue: String,
-    pub datetime: chrono::NaiveDateTime,
-    pub limit: u16,
-    pub fee: u32,
+    pub description: Option<String>,
+    pub organizer: Option<String>,
+    //pub venue: Option<String>,
+    pub datetime: Option<chrono::NaiveDateTime>,
+    pub limit: Option<i16>,
+    pub fee: Option<i32>,
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize)]
 pub struct Question {
     pub event_id: i32,
-    pub question: String,
-    pub option1: String,
-    pub option2: String,
-    pub option3: String,
-    pub option4: String,
+    pub id: i32,
+    pub question: Option<String>,
+    pub option1: Option<String>,
+    pub option2: Option<String>,
+    pub option3: Option<String>,
+    pub option4: Option<String>,
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize)]
@@ -54,4 +55,15 @@ pub struct NewUser<'a> {
     pub phone: &'a str,
     pub branch: &'a str,
     pub joined_on: chrono::NaiveDateTime,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "event"]
+pub struct NewEvent<'a> {
+    pub name: &'a str,
+    pub description: &'a str,
+    pub organizers: &'a str,
+    pub starts_at: chrono::NaiveDateTime,
+    pub max_participants: &'a i16,
+    pub fee: &'a i32,
 }
