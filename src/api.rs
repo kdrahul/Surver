@@ -1,6 +1,7 @@
-use super::models::{ERSUsers, NewUser, Event, NewEvent};
-use super::schema::ersusers::dsl::*;
-use super::schema::event::dsl::*;
+use super::models::{Users, NewUser, Events, NewEvent};
+use diesel::dsl::count_star;
+use super::schema::users::dsl::*;
+use super::schema::events::dsl::*;
 use actix_web::{web, HttpResponse, Error };
 use super::Pool;
 use serde::{Serialize, Deserialize};
@@ -12,8 +13,11 @@ use std::vec::Vec;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserData {
-    pub user_group: String,
-    pub name: String,
+    pub role: String,
+    pub username: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub password: String,
     pub email: String,
     pub phone: String,
     pub branch: String,
@@ -23,8 +27,11 @@ pub struct EventData {
     pub name: String,
     pub description: String,
     pub organizers: String,
-    pub max_participants: i16,
-    pub fee: i32
+    pub max_limit: i32,
+    pub fee: i32,
+    pub prize_money: i32,
+    pub venue: String,
+    pub starts_at: chrono::NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +43,7 @@ pub struct QuestionData {
     pub option4: String,
     pub answer: i32,
 }
+
 
 // API for /users
 pub async fn get_users(db: web::Data<Pool>) -> Result<HttpResponse, Error> {
@@ -116,60 +124,77 @@ pub async fn delete_event(
         )
 }
 
-fn get_single_event(db: web::Data<Pool>, event_id: i32) -> Result<Event, diesel::result::Error> {
-            let conn = db.get().unwrap();
-            let res = event.find(event_id).get_result::<Event>(&conn)?;
-            Ok(res)
+pub async fn get_event_count(db: web::Data<Pool>) -> Result<HttpResponse, Error> {
+    Ok(web::block(move || get_count(db))
+        .await
+        .map(|data| HttpResponse::Ok().json(data))
+        .map_err(|_| HttpResponse::InternalServerError())?
+    )
+}
+fn get_count(db: web::Data<Pool>) -> Result<i64, diesel::result::Error> {
+    let conn = db.get().unwrap();
+    let res = events.select(count_star()).first::<i64>(&conn);
+    Ok(res.unwrap())
 }
 
-fn get_all_events(db: web::Data<Pool>) -> Result<Vec<Event>, diesel::result::Error>{
+fn get_single_event(db: web::Data<Pool>, event_id: i32) -> Result<Events, diesel::result::Error> {
     let conn = db.get().unwrap();
-    let res = event.load::<Event>(&conn)?;
+    let res = events.find(event_id).get_result::<Events>(&conn)?;
     Ok(res)
 }
 
-fn get_all_users(pool: web::Data<Pool>) -> Result<Vec<ERSUsers>, diesel::result::Error> {
+fn get_all_events(db: web::Data<Pool>) -> Result<Vec<Events>, diesel::result::Error>{
+    let conn = db.get().unwrap();
+    let res = events.load::<Events>(&conn)?;
+    Ok(res)
+}
+
+fn get_all_users(pool: web::Data<Pool>) -> Result<Vec<Users>, diesel::result::Error> {
     let conn = pool.get().unwrap();
-    let items = ersusers.load::<ERSUsers>(&conn)?;
+    let items = users.load::<Users>(&conn)?;
     Ok(items)
 }
 
-fn user_by_id(pool: web::Data<Pool>, user_id: i32) -> Result<ERSUsers, diesel::result::Error> {
+fn user_by_id(pool: web::Data<Pool>, user_id: i32) -> Result<Users, diesel::result::Error> {
     let conn = pool.get().unwrap();
-    ersusers.find(user_id).get_result::<ERSUsers>(&conn)
+    users.find(user_id).get_result::<Users>(&conn)
 }
 
 fn single_user(
     db: web::Data<Pool>,
     userdata: web::Json<UserData> 
-    ) -> Result<ERSUsers, diesel::result::Error> {
+    ) -> Result<Users, diesel::result::Error> {
     let conn = db.get().unwrap();
     let new_user = NewUser {
-        name: &userdata.name,
-        user_group: &userdata.user_group,
+        username: &userdata.username,
+        password: &userdata.password,
+        first_name: &userdata.first_name,
+        last_name: &userdata.last_name,
+
+        role: &userdata.role,
         email: &userdata.email,
         phone:  &userdata.phone,
         branch: &userdata.branch,
-        joined_on: chrono::Local::now().naive_local()
     };
-    let res = insert_into(ersusers).values(&new_user).get_result(&conn)?;
+    let res = insert_into(users).values(&new_user).get_result(&conn)?;
     Ok(res)
 }
 
 fn add_single_event(
     db: web::Data<Pool>,
     eventdata: web::Json<EventData> 
-    ) -> Result<Event, diesel::result::Error> {
+    ) -> Result<Events, diesel::result::Error> {
     let conn = db.get().unwrap();
     let new_event = NewEvent {
-       name: &eventdata.name,
-       description: &eventdata.description,
-       organizers: &eventdata.organizers,
-       starts_at: chrono::Local::now().naive_local(),
-       max_participants: &eventdata.max_participants,
-       fee: &eventdata.fee,
+        name: &eventdata.name,
+        description: &eventdata.description,
+        starts_at: chrono::Local::now().naive_local(),
+        max_limit: &eventdata.max_limit,
+        fee: &eventdata.fee,
+        prize_money: &eventdata.prize_money,
+        venue: &eventdata.venue,
     };
-    let res = insert_into(event).values(&new_event).get_result(&conn)?;
+    let res = insert_into(events).values(&new_event).get_result(&conn)?;
     Ok(res)
 }
 
@@ -178,7 +203,7 @@ fn del_user(
     user_id: i32
 ) -> Result<usize, diesel::result::Error> {
     let conn = db.get().unwrap();
-    let count = delete(ersusers.find(user_id)).execute(&conn)?;
+    let count = delete(users.find(user_id)).execute(&conn)?;
     Ok(count)
 }
 
@@ -187,12 +212,24 @@ fn delete_single_event(
     event_id: i32
 ) -> Result<usize, diesel::result::Error> {
     let conn = db.get().unwrap();
-    let count = delete(event.find(event_id)).execute(&conn)?;
+    let count = delete(events.find(event_id)).execute(&conn)?;
     Ok(count)
 }
 
 
-
+pub async fn desc(db: web::Data<Pool>, event_id: web::Path<i32>) -> Result<HttpResponse, Error> {
+    Ok(
+        web::block(move || get_desc(db, event_id.into_inner()))
+        .await
+        .map(|ev| HttpResponse::Ok().json(ev))
+        .map_err(|_| HttpResponse::InternalServerError())?
+    )
+}
+fn get_desc(db: web::Data<Pool>, event_id: i32) -> Result<String, diesel::result::Error> {
+    let conn = db.get().unwrap();
+    let res = events.find(event_id).select(description).first::<Option<String>>(&conn)?;
+    Ok(res.unwrap())
+}
 // API for /events
 //pub async fn get_surveys() -> Result<HttpResponse, Error>{} 
 //pub async fn add_surveys() -> Result<HttpResponse, Error>{} 
