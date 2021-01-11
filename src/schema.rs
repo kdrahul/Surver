@@ -30,6 +30,7 @@ table! {
         user_id -> Int4,
         event_id -> Int4,
         question_id -> Int4,
+        response_date -> Nullable<Timestamp>,
         user_response -> Nullable<Varchar>,
     }
 }
@@ -53,9 +54,4 @@ joinable!(response -> events (event_id));
 joinable!(response -> questions (question_id));
 joinable!(response -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(
-    events,
-    questions,
-    response,
-    users,
-);
+allow_tables_to_appear_in_same_query!(events, questions, response, users,);

@@ -44,12 +44,12 @@ create table Response (
     user_id serial,
     event_id serial,
     question_id serial,
+    response_date timestamp,
+    user_response varchar(50),
 
     foreign key(user_id) references users(id),
     foreign key(event_id) references Events(id),
-    foreign key(question_id) references questions(id),
+    foreign key(question_id) references questions(id)
 
-
-    user_response varchar(50)
 );
 

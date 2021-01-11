@@ -19,3 +19,26 @@ insert into Events values(
     '5000',
     '100',
     '0');
+
+insert into Users values (
+    '1',
+    'rahul',
+    'survey',
+    'admin',
+    'rahul',
+    'kulkarni',
+    'kdrahul@github.com',
+    '987654321',
+    'ise'
+);
+insert into Users values (
+    '2',
+    'supriya',
+    'something',
+    'user',
+    'Supriya',
+    'S',
+    'sus@github.com',
+    '987654321',
+    'ise'
+);

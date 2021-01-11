@@ -18,7 +18,6 @@ pub struct Users {
     pub id: i32,
     pub username: Option<String>,
     pub password: Option<String>,
-
     pub role: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
@@ -29,7 +28,6 @@ pub struct Users {
 
 #[derive(Debug, Queryable, Serialize, Deserialize)]
 pub struct Question {
-    pub event_id: i32,
     pub id: i32,
     pub question: Option<String>,
     pub option1: Option<String>,
@@ -37,16 +35,17 @@ pub struct Question {
     pub option3: Option<String>,
     pub option4: Option<String>,
     pub answer: Option<String>,
+    pub event_id: i32,
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize)]
-pub struct SurveyResponse {
+pub struct Responses {
     pub id: i32,
     pub event_id: i32,
     pub user_id: i32,
     pub question_id: i32,
+    pub resp_date: Option<chrono::NaiveDateTime>,
     pub user_response: Option<String>,
-    pub date: chrono::NaiveDateTime,
 }
 
 // Only used for POST
@@ -86,4 +85,14 @@ pub struct NewQuestion<'a> {
     pub option4: &'a str,
     pub answer: &'a str,
     pub event_id: &'a i32,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "response"]
+pub struct NewResponse<'a> {
+    pub user_id: &'a i32,
+    pub event_id: &'a i32,
+    pub question_id: &'a i32,
+    pub response_date: chrono::NaiveDateTime,
+    pub user_response: &'a str,
 }
