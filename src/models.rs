@@ -29,12 +29,7 @@ pub struct Users {
 #[derive(Debug, Queryable, Serialize, Deserialize)]
 pub struct Question {
     pub id: i32,
-    pub question: Option<String>,
-    pub option1: Option<String>,
-    pub option2: Option<String>,
-    pub option3: Option<String>,
-    pub option4: Option<String>,
-    pub answer: Option<String>,
+    pub question_description: Option<String>,
     pub event_id: i32,
 }
 
@@ -78,12 +73,7 @@ pub struct NewEvent<'a> {
 #[derive(Debug, Insertable)]
 #[table_name = "questions"]
 pub struct NewQuestion<'a> {
-    pub question: &'a str,
-    pub option1: &'a str,
-    pub option2: &'a str,
-    pub option3: &'a str,
-    pub option4: &'a str,
-    pub answer: &'a str,
+    pub question_description: &'a str,
     pub event_id: &'a i32,
 }
 

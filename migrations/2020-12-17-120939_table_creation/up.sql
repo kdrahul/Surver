@@ -29,12 +29,7 @@ create table Events (
 
 create table Questions (
     id serial not null primary key,
-    question varchar(200),
-    option1 varchar(50),
-    option2 varchar(50),
-    option3 varchar(50),
-    option4 varchar(50),
-    answer varchar(50),
+    question_description varchar(200),
     event_id serial,
     foreign key(event_id) references Events(id)
 );

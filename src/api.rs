@@ -228,12 +228,7 @@ fn get_desc(db: web::Data<Pool>, eventid: i32) -> Result<String, diesel::result:
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct QuestionData {
-    pub question: String,
-    pub option1: String,
-    pub option2: String,
-    pub option3: String,
-    pub option4: String,
-    pub answer: String,
+    pub question_description: String,
     pub event_id: i32
 }
 
@@ -276,12 +271,7 @@ fn single_question(
     ) -> Result<Question, diesel::result::Error> {
     let conn = db.get().unwrap();
     let new_question = NewQuestion {
-        question: &questiondata.question,
-        option1: &questiondata.option1,
-        option2: &questiondata.option2,
-        option3: &questiondata.option3,
-        option4: &questiondata.option4,
-        answer: &questiondata.answer,
+        question_description: &questiondata.question_description,
         event_id: &questiondata.event_id
     };
     let res = insert_into(questions).values(&new_question).get_result(&conn)?;

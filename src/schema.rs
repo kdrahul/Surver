@@ -14,12 +14,7 @@ table! {
 table! {
     questions (id) {
         id -> Int4,
-        question -> Nullable<Varchar>,
-        option1 -> Nullable<Varchar>,
-        option2 -> Nullable<Varchar>,
-        option3 -> Nullable<Varchar>,
-        option4 -> Nullable<Varchar>,
-        answer -> Nullable<Varchar>,
+        question_description -> Nullable<Varchar>,
         event_id -> Int4,
     }
 }
@@ -54,4 +49,9 @@ joinable!(response -> events (event_id));
 joinable!(response -> questions (question_id));
 joinable!(response -> users (user_id));
 
-allow_tables_to_appear_in_same_query!(events, questions, response, users,);
+allow_tables_to_appear_in_same_query!(
+    events,
+    questions,
+    response,
+    users,
+);
